@@ -5,7 +5,7 @@ import 'package:time_manager/widgets/custom_slider/paints.dart';
 
 import 'sizes.dart';
 import 'clock_ticks.dart';
-import 'Paints.dart';
+import 'paints.dart';
 
 class CustomSlider extends StatefulWidget {
   const CustomSlider({super.key});
