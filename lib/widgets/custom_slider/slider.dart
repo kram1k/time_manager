@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:time_manager/widgets/custom_slider/paints.dart';
 
 import 'sizes.dart';
 import 'clock_ticks.dart';
+import 'Paints.dart';
 
 class CustomSlider extends StatefulWidget {
   const CustomSlider({super.key});
@@ -27,24 +29,22 @@ class SliderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Sizes sizes = Sizes(size: size);
+    Paints paints = Paints(sizes: sizes);
     // BigCircle
-    Paint bigCirclePaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.blue.shade900;
-    canvas.drawCircle(sizes.center, sizes.bigCircleRadius, bigCirclePaint);
+    canvas.drawCircle(
+      sizes.center,
+      sizes.bigCircleRadius,
+      paints.bigCircle,
+    );
     // smallCircle
-    Paint smallCircle = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.blue.shade300;
-    canvas.drawCircle(sizes.center, sizes.smallCircleRadius, smallCircle);
+    canvas.drawCircle(
+      sizes.center,
+      sizes.smallCircleRadius,
+      paints.smallCircle,
+    );
     // Text
-    _smallCircleTextCreater(canvas: canvas, sizes: sizes);
+    _smallCircleTextCreater(canvas: canvas, sizes: sizes, paints: paints);
     // Arc
-    Paint arcPaint = Paint()
-      ..color = Colors.blue.shade300
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = sizes.arcStrokeWidth;
     canvas.drawArc(
       Rect.fromCenter(
         center: sizes.center,
@@ -54,32 +54,31 @@ class SliderPainter extends CustomPainter {
       -math.pi / 2,
       3 * math.pi / 4,
       false,
-      arcPaint,
+      paints.sliderArc,
     );
   }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 
-  void _smallCircleTextCreater({required Canvas canvas, required Sizes sizes}) {
+  void _smallCircleTextCreater({
+    required Canvas canvas,
+    required Sizes sizes,
+    required Paints paints,
+  }) {
     // big
-    Paint linePaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1.5;
     _drawPartOfClock(
       angles: ClockTicks.medium + ClockTicks.large,
       canvas: canvas,
       sizes: sizes,
-      paint: linePaint,
+      paint: paints.clockLine,
       lineLength: 6,
     );
     _drawPartOfClock(
       angles: ClockTicks.small(),
       canvas: canvas,
       sizes: sizes,
-      paint: linePaint,
+      paint: paints.clockLine,
       lineLength: 0.5,
     );
 
@@ -105,7 +104,6 @@ class SliderPainter extends CustomPainter {
     required double lineLength,
   }) {
     for (var i = 0; i < angles.length; i++) {
-      // Смещаем угол на -90 градусов (вверх)
       final double drawAngle = angles[i].toDouble() - (math.pi / 2);
 
       final double x1 =
