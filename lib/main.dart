@@ -17,15 +17,6 @@ class MainApp extends StatelessWidget {
           body: Center(
             child: CustomSlider(),
           ),
-        bottomNavigationBar: NavigationBar(
-          destinations: [
-            NavigationDestination(icon: Icon(Icons.shield_moon), label: "Mood"),
-            NavigationDestination(
-              icon: Icon(Icons.sunny),
-              label: "Sunny",
-            ),
-          ],
-        ),
       ),
       debugShowCheckedModeBanner: false,
     );
