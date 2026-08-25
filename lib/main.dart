@@ -12,7 +12,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(scaffoldBackgroundColor: Colors.blue.shade400),
+      theme: ThemeData(scaffoldBackgroundColor: Colors.grey.shade800),
       home: Scaffold(
           body: Center(
             child: CustomSlider(),

@@ -132,9 +132,9 @@ class SliderPainter extends CustomPainter {
     final textSpan = TextSpan(
       text: text,
       style: const TextStyle(
-        color: Colors.black,
         fontSize: 13,
         fontWeight: FontWeight.bold,
+        color: Colors.grey
       ),
     );
 

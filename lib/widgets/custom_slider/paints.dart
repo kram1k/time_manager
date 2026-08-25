@@ -7,10 +7,10 @@ class Paints {
 
   Paint bigCircle = Paint()
     ..style = PaintingStyle.fill
-    ..color = Colors.blue.shade900;
+    ..color = Colors.black;
   Paint smallCircle = Paint()
     ..style = PaintingStyle.fill
-    ..color = Colors.blue.shade300;
+    ..color = Colors.grey.shade900;
   Paint clockLine = Paint()
     ..color = Colors.black
     ..style = PaintingStyle.stroke
@@ -18,7 +18,7 @@ class Paints {
     ..strokeWidth = 1.5;
 
   Paint get sliderArc => Paint()
-    ..color = Colors.blue.shade300
+    ..color = Colors.grey.shade900
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..strokeWidth = sizes.arcStrokeWidth;
