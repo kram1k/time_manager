@@ -1,41 +1,39 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:time_manager/widgets/custom_slider/paints.dart';
 
 import 'sizes.dart';
 import 'clock_ticks.dart';
-import 'paints.dart';
 
-class CustomSlider extends StatefulWidget {
-  const CustomSlider({super.key});
+class CustomSlider extends StatelessWidget {
+  final Map<String, ui.Picture> preloadedSVGs;
+  
+  const CustomSlider({super.key, required this.preloadedSVGs});
 
-  @override
-  State<CustomSlider> createState() => _CustomSliderState();
-}
-
-class _CustomSliderState extends State<CustomSlider> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: MediaQuery.of(context).size.width / 4,
       height: MediaQuery.of(context).size.height / 4,
-      child: CustomPaint(painter: SliderPainter()),
+      child: CustomPaint(painter: SliderPainter(mapPicture: preloadedSVGs)),
     );
   }
 }
 
+
 class SliderPainter extends CustomPainter {
+  final Map<String, ui.Picture> mapPicture;
+
+  SliderPainter({required this.mapPicture});
+
   @override
   void paint(Canvas canvas, Size size) {
     Sizes sizes = Sizes(size: size);
     Paints paints = Paints(sizes: sizes);
     // BigCircle
-    canvas.drawCircle(
-      sizes.center,
-      sizes.bigCircleRadius,
-      paints.bigCircle,
-    );
+    canvas.drawCircle(sizes.center, sizes.bigCircleRadius, paints.bigCircle);
     // smallCircle
     canvas.drawCircle(
       sizes.center,
@@ -56,10 +54,32 @@ class SliderPainter extends CustomPainter {
       false,
       paints.sliderArc,
     );
+    // SVG
+    for (final entry in mapPicture.entries) {
+      canvas.save();
+      double angle = 0.0;
+      if (entry.key == 'moon') {
+        angle = - math.pi / 2;
+      } else if (entry.key == 'sun') {
+        angle = math.pi / 2;
+      }
+      final double dx = sizes.center.dx + (sizes.smallCircleRadius - 40) * math.cos(angle);
+      final double dy = sizes.center.dy + (sizes.smallCircleRadius - 40) * math.sin(angle);
+      canvas.translate(dx, dy);
+      canvas.scale(0.60, 0.60);
+      const double svgWidth = 24.0;
+      const double svgHeight = 24.0;
+      canvas.translate(-svgWidth / 2, -svgHeight / 2);
+      canvas.drawPicture(entry.value);
+      canvas.restore();
+    }
+
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant SliderPainter oldDelegate) {
+    return oldDelegate.mapPicture.length != mapPicture.length;
+  }
 
   void _smallCircleTextCreater({
     required Canvas canvas,
@@ -132,9 +152,9 @@ class SliderPainter extends CustomPainter {
     final textSpan = TextSpan(
       text: text,
       style: const TextStyle(
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: Colors.grey
+        color: Colors.grey,
       ),
     );
 
