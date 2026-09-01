@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart' as svg;
-import 'package:time_manager/widgets/custom_slider/slider.dart';
+import 'package:time_manager/widgets/custom_slider/clock.dart';
 
 final Map<String, ui.Picture> preloadedSVGs = {};
 
