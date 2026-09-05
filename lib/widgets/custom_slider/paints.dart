@@ -17,9 +17,11 @@ class Paints {
     ..strokeCap = StrokeCap.round
     ..strokeWidth = 1.5;
 
-  Paint get sliderArc => Paint()
+  Paint get clockArc => Paint()
     ..color = Colors.grey.shade900
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..strokeWidth = sizes.arcStrokeWidth;
+
+  Paint get sliderArc => clockArc;  
 }

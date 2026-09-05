@@ -7,26 +7,26 @@ import 'package:time_manager/widgets/custom_slider/paints.dart';
 import 'sizes.dart';
 import 'clock_ticks.dart';
 
-class CustomSlider extends StatelessWidget {
+class CustomClock extends StatelessWidget {
   final Map<String, ui.Picture> preloadedSVGs;
   
-  const CustomSlider({super.key, required this.preloadedSVGs});
+  const CustomClock({super.key, required this.preloadedSVGs});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: MediaQuery.of(context).size.width / 4,
       height: MediaQuery.of(context).size.height / 4,
-      child: CustomPaint(painter: SliderPainter(mapPicture: preloadedSVGs)),
+      child: CustomPaint(painter: ClockPainter(mapPicture: preloadedSVGs)),
     );
   }
 }
 
 
-class SliderPainter extends CustomPainter {
+class ClockPainter extends CustomPainter {
   final Map<String, ui.Picture> mapPicture;
 
-  SliderPainter({required this.mapPicture});
+  ClockPainter({required this.mapPicture});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -52,7 +52,7 @@ class SliderPainter extends CustomPainter {
       -math.pi / 2,
       3 * math.pi / 4,
       false,
-      paints.sliderArc,
+      paints.clockArc,
     );
     // SVG
     for (final entry in mapPicture.entries) {
@@ -77,7 +77,7 @@ class SliderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant SliderPainter oldDelegate) {
+  bool shouldRepaint(covariant ClockPainter oldDelegate) {
     return oldDelegate.mapPicture.length != mapPicture.length;
   }
 

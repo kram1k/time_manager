@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart' as svg;
 import 'package:time_manager/widgets/custom_slider/clock.dart';
+import 'package:time_manager/widgets/custom_slider/slider.dart';
 
 final Map<String, ui.Picture> preloadedSVGs = {};
 
@@ -31,8 +32,19 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(scaffoldBackgroundColor: Colors.grey.shade800),
-      home: Scaffold(body: Center(child: CustomSlider(preloadedSVGs: preloadedSVGs,))),
+      home: Scaffold(
+        body: Center(
+          child: Stack(
+            alignment: Alignment.center, // Центрируем оба слоя
+            children: [
+              CustomClock(preloadedSVGs: preloadedSVGs),
+              const CustomSlider(), 
+            ],
+          ),
+        ),
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
 }
+
