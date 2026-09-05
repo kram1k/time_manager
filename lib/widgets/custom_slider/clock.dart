@@ -42,18 +42,6 @@ class ClockPainter extends CustomPainter {
     );
     // Text
     _smallCircleTextCreater(canvas: canvas, sizes: sizes, paints: paints);
-    // Arc
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: sizes.center,
-        width: sizes.arcRadius,
-        height: sizes.arcRadius,
-      ),
-      -math.pi / 2,
-      3 * math.pi / 4,
-      false,
-      paints.clockArc,
-    );
     // SVG
     for (final entry in mapPicture.entries) {
       canvas.save();
