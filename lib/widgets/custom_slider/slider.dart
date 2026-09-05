@@ -1,6 +1,7 @@
 /* AI SLOP !!!!! */
 
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:time_manager/widgets/custom_slider/paints.dart';
 import 'package:time_manager/widgets/custom_slider/sizes.dart';
@@ -9,11 +10,14 @@ import 'package:time_manager/widgets/custom_slider/sizes.dart';
 enum DragMode { none, startEdge, endEdge, body }
 
 class CustomSlider extends StatefulWidget {
-  const CustomSlider({super.key});
+  final Map<String, ui.Picture> preloadedSVGs;
+
+  const CustomSlider({super.key, required this.preloadedSVGs});
 
   @override
   State<CustomSlider> createState() => _CustomSliderState();
 }
+
 
 class _CustomSliderState extends State<CustomSlider> {
   // Теперь у дуги меняется и точка старта, и длина
@@ -108,31 +112,28 @@ class _CustomSliderState extends State<CustomSlider> {
       if (_dragMode == DragMode.body) {
         // Двигаем дугу целиком
         _startAngle += delta;
-      } 
-      else if (_dragMode == DragMode.startEdge) {
+      } else if (_dragMode == DragMode.startEdge) {
         // Вычисляем новую длину
         double newSweep = _sweepAngle - delta;
-        
-        // Ограничиваем длину: 
+
+        // Ограничиваем длину:
         // 0.15 - защита от выворачивания наизнанку
         // math.pi - максимум 12 часов (половина круга)
         double clampedSweep = newSweep.clamp(0.15, math.pi);
-        
+
         // Смещаем старт только на ту разницу, которую разрешил clamp
         double actualDelta = _sweepAngle - clampedSweep;
         _startAngle += actualDelta;
         _sweepAngle = clampedSweep;
-      } 
-      else if (_dragMode == DragMode.endEdge) {
+      } else if (_dragMode == DragMode.endEdge) {
         // Вычисляем новую длину и сразу применяем лимит
         double newSweep = _sweepAngle + delta;
         _sweepAngle = newSweep.clamp(0.15, math.pi);
       }
-      
+
       _lastAngle = touchAngle;
     });
   }
-
 
   // Когда отпускаем палец - сбрасываем режим
   void _onPanEnd(DragEndDetails details) {
@@ -158,6 +159,7 @@ class _CustomSliderState extends State<CustomSlider> {
           painter: SliderPainter(
             startAngle: _startAngle,
             sweepAngle: _sweepAngle,
+            mapPicture: widget.preloadedSVGs, // <-- ПЕРЕДАТЬ КАРТИНКИ СЮДА
           ),
         ),
       ),
@@ -168,31 +170,93 @@ class _CustomSliderState extends State<CustomSlider> {
 class SliderPainter extends CustomPainter {
   final double startAngle;
   final double sweepAngle;
+  final Map<String, ui.Picture> mapPicture;
 
-  SliderPainter({required this.startAngle, required this.sweepAngle});
+  SliderPainter({
+    required this.startAngle,
+    required this.sweepAngle,
+    required this.mapPicture,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     Sizes sizes = Sizes(size: size);
     Paints paints = Paints(sizes: sizes);
 
+    // 1. Отрисовка дуги
     canvas.drawArc(
       Rect.fromCenter(
         center: sizes.center,
         width: sizes.arcRadius,
         height: sizes.arcRadius,
       ),
-      startAngle, // <-- ТЕПЕРЬ СТАРТ ДИНАМИЧЕСКИЙ
+      startAngle,
       sweepAngle,
       false,
       paints.sliderArc,
     );
+
+    // 2. Вычисляем координаты краев дуги
+    // Радиус орбиты = половина ширины arcRadius
+    final double radius = sizes.arcRadius / 2;
+
+    // Точка начала (зеленый круг)
+    final Offset startPoint = Offset(
+      sizes.center.dx + radius * math.cos(startAngle),
+      sizes.center.dy + radius * math.sin(startAngle),
+    );
+
+    // Точка конца (красный круг)
+    final Offset endPoint = Offset(
+      sizes.center.dx + radius * math.cos(startAngle + sweepAngle),
+      sizes.center.dy + radius * math.sin(startAngle + sweepAngle),
+    );
+
+    // 3. Рисуем круги-ручки
+    final double circleRadius = 12; // Размер кругов можно поменять здесь
+
+    // Зеленый круг в начале
+    canvas.drawCircle(startPoint, circleRadius, Paint()..color = Colors.green.shade400);
+
+    // Красный круг в конце
+    canvas.drawCircle(endPoint, circleRadius, Paint()..color = Colors.red.shade400);
+
+    // 4. Логика отрисовки полупрозрачных SVG
+    void drawSvgIcon(String key, Offset position) {
+      if (!mapPicture.containsKey(key)) return;
+
+      // saveLayer с прозрачным Paint делает всё внутри себя полупрозрачным
+      // 0.5 = 50% прозрачности
+      canvas.saveLayer(
+        Rect.fromCenter(
+          center: position,
+          width: circleRadius * 2,
+          height: circleRadius * 2,
+        ),
+        Paint()..color = Colors.black,
+      );
+
+      canvas.translate(position.dx, position.dy);
+      canvas.scale(0.60, 0.60);
+      const double svgWidth = 24.0;
+      const double svgHeight = 24.0;
+      canvas.translate(-svgWidth / 2, -svgHeight / 2);
+
+      canvas.drawPicture(mapPicture[key]!);
+
+      // Восстанавливаем холст (применяя прозрачность ко всему слою)
+      canvas.restore();
+    }
+
+    // Рисуем иконки поверх наших кругов
+    drawSvgIcon('lock', startPoint);
+    drawSvgIcon('lock_open', endPoint);
   }
 
   @override
   bool shouldRepaint(covariant SliderPainter oldDelegate) {
-    // Перерисовываем, если изменился старт или длина
     return oldDelegate.startAngle != startAngle ||
-        oldDelegate.sweepAngle != sweepAngle;
+        oldDelegate.sweepAngle != sweepAngle ||
+        oldDelegate.mapPicture.length != mapPicture.length;
   }
 }

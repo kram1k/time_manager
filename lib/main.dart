@@ -7,7 +7,12 @@ import 'package:time_manager/widgets/custom_slider/slider.dart';
 final Map<String, ui.Picture> preloadedSVGs = {};
 
 Future<void> preloadAssets() async {
-  final paths = {'moon': 'moon.svg', 'sun': 'sun.svg'};
+  final paths = {
+    'moon': 'moon.svg',
+    'sun': 'sun.svg',
+    'lock': 'lock.svg',
+    'lock_open': 'lock_open.svg',
+  };
 
   for (final entry in paths.entries) {
     final loader = svg.SvgAssetLoader(entry.value);
@@ -24,7 +29,6 @@ void main() async {
   runApp(const MainApp());
 }
 
-
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -38,7 +42,7 @@ class MainApp extends StatelessWidget {
             alignment: Alignment.center, // Центрируем оба слоя
             children: [
               CustomClock(preloadedSVGs: preloadedSVGs),
-              const CustomSlider(), 
+              CustomSlider(preloadedSVGs: preloadedSVGs),
             ],
           ),
         ),
@@ -47,4 +51,3 @@ class MainApp extends StatelessWidget {
     );
   }
 }
-

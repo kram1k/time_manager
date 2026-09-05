@@ -9,7 +9,7 @@ import 'clock_ticks.dart';
 
 class CustomClock extends StatelessWidget {
   final Map<String, ui.Picture> preloadedSVGs;
-  
+
   const CustomClock({super.key, required this.preloadedSVGs});
 
   @override
@@ -21,7 +21,6 @@ class CustomClock extends StatelessWidget {
     );
   }
 }
-
 
 class ClockPainter extends CustomPainter {
   final Map<String, ui.Picture> mapPicture;
@@ -44,24 +43,28 @@ class ClockPainter extends CustomPainter {
     _smallCircleTextCreater(canvas: canvas, sizes: sizes, paints: paints);
     // SVG
     for (final entry in mapPicture.entries) {
-      canvas.save();
-      double angle = 0.0;
-      if (entry.key == 'moon') {
-        angle = - math.pi / 2;
-      } else if (entry.key == 'sun') {
-        angle = math.pi / 2;
-      }
-      final double dx = sizes.center.dx + (sizes.smallCircleRadius - 40) * math.cos(angle);
-      final double dy = sizes.center.dy + (sizes.smallCircleRadius - 40) * math.sin(angle);
-      canvas.translate(dx, dy);
-      canvas.scale(0.60, 0.60);
-      const double svgWidth = 24.0;
-      const double svgHeight = 24.0;
-      canvas.translate(-svgWidth / 2, -svgHeight / 2);
-      canvas.drawPicture(entry.value);
-      canvas.restore();
-    }
+      if (entry.key == 'moon' || entry.key == 'sun') {
+        canvas.save();
+        double angle = 0.0;
+        if (entry.key == 'moon') {
+          angle = -math.pi / 2;
+        } else if (entry.key == 'sun') {
+          angle = math.pi / 2;
+        }
 
+        final double dx =
+            sizes.center.dx + (sizes.smallCircleRadius - 40) * math.cos(angle);
+        final double dy =
+            sizes.center.dy + (sizes.smallCircleRadius - 40) * math.sin(angle);
+        canvas.translate(dx, dy);
+        canvas.scale(0.60, 0.60);
+        const double svgWidth = 24.0;
+        const double svgHeight = 24.0;
+        canvas.translate(-svgWidth / 2, -svgHeight / 2);
+        canvas.drawPicture(entry.value);
+        canvas.restore();
+      };
+    }
   }
 
   @override
