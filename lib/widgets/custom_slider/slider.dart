@@ -240,8 +240,8 @@ class SliderPainter extends CustomPainter {
 
     // 4. Рисуем круги-ручки
     final double circleRadius = 12; 
-    canvas.drawCircle(startPoint, circleRadius, Paint()..color = Colors.red.shade400);
-    canvas.drawCircle(endPoint, circleRadius, Paint()..color = Colors.green.shade400);
+    canvas.drawCircle(startPoint, circleRadius, paints.offIcon);
+    canvas.drawCircle(endPoint, circleRadius, paints.onIcon);
 
     // 5. Логика отрисовки полупрозрачных SVG
     void drawSvgIcon(String key, Offset position) {
@@ -253,7 +253,7 @@ class SliderPainter extends CustomPainter {
           width: circleRadius * 2,
           height: circleRadius * 2,
         ),
-        Paint()..color = Colors.black,
+        paints.lockIcon,
       );
 
       canvas.translate(position.dx, position.dy);

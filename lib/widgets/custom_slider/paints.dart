@@ -21,6 +21,9 @@ class Paints {
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..strokeWidth = 1.5;
+  Paint offIcon = Paint()..color = Colors.red.shade400;
+  Paint onIcon = Paint()..color = Colors.green.shade400;
+  Paint lockIcon = Paint()..color = Colors.black;
 
   Paint get clockArc => Paint()
     ..color = Colors.grey.shade900
