@@ -1,4 +1,4 @@
-/* AI SLOP !!!!! */
+/* !!!! AI SLOP !!!!! */
 
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -183,7 +183,10 @@ class SliderPainter extends CustomPainter {
     Sizes sizes = Sizes(size: size);
     Paints paints = Paints(sizes: sizes);
 
-    // 1. Отрисовка дуги
+    // Радиус орбиты = половина ширины arcRadius
+    final double radius = sizes.arcRadius / 2;
+
+    // 1. Отрисовка самой дуги слайдера
     canvas.drawArc(
       Rect.fromCenter(
         center: sizes.center,
@@ -196,10 +199,33 @@ class SliderPainter extends CustomPainter {
       paints.sliderArc,
     );
 
-    // 2. Вычисляем координаты краев дуги
-    // Радиус орбиты = половина ширины arcRadius
-    final double radius = sizes.arcRadius / 2;
+    // --- 2. Отрисовка рисочек ПОВЕРХ дуги слайдера ---
+    // Шаг между рисочками (например, каждые 15 градусов = math.pi / 12)
+    // Если полкруга (math.pi) это 12 часов, то math.pi / 12 = 1 час.
+    final double tickStep = math.pi / 40; 
 
+    // Идем циклом от начала дуги до её конца с заданным шагом.
+    // Начинаем с tickStep, чтобы не рисовать черточку прямо под начальным кружком.
+    for (double currentSweep = tickStep; currentSweep < sweepAngle; currentSweep += tickStep) {
+      final double angle = startAngle + currentSweep;
+      final double tickLength = 10.0; // Длина рисочки
+
+      // Располагаем черточку поперек дуги (центрируем по радиусу)
+      final Offset outerPoint = Offset(
+        sizes.center.dx + (radius + tickLength / 2) * math.cos(angle),
+        sizes.center.dy + (radius + tickLength / 2) * math.sin(angle),
+      );
+      
+      final Offset innerPoint = Offset(
+        sizes.center.dx + (radius - tickLength / 2) * math.cos(angle),
+        sizes.center.dy + (radius - tickLength / 2) * math.sin(angle),
+      );
+
+      canvas.drawLine(innerPoint, outerPoint, paints.sliderLine);
+    }
+    // ---------------------------------------------------
+
+    // 3. Вычисляем координаты краев дуги
     // Точка начала (зеленый круг)
     final Offset startPoint = Offset(
       sizes.center.dx + radius * math.cos(startAngle),
@@ -212,21 +238,15 @@ class SliderPainter extends CustomPainter {
       sizes.center.dy + radius * math.sin(startAngle + sweepAngle),
     );
 
-    // 3. Рисуем круги-ручки
-    final double circleRadius = 12; // Размер кругов можно поменять здесь
-
-    // Зеленый круг в начале
+    // 4. Рисуем круги-ручки
+    final double circleRadius = 12; 
     canvas.drawCircle(startPoint, circleRadius, Paint()..color = Colors.green.shade400);
-
-    // Красный круг в конце
     canvas.drawCircle(endPoint, circleRadius, Paint()..color = Colors.red.shade400);
 
-    // 4. Логика отрисовки полупрозрачных SVG
+    // 5. Логика отрисовки полупрозрачных SVG
     void drawSvgIcon(String key, Offset position) {
       if (!mapPicture.containsKey(key)) return;
 
-      // saveLayer с прозрачным Paint делает всё внутри себя полупрозрачным
-      // 0.5 = 50% прозрачности
       canvas.saveLayer(
         Rect.fromCenter(
           center: position,
@@ -243,12 +263,9 @@ class SliderPainter extends CustomPainter {
       canvas.translate(-svgWidth / 2, -svgHeight / 2);
 
       canvas.drawPicture(mapPicture[key]!);
-
-      // Восстанавливаем холст (применяя прозрачность ко всему слою)
       canvas.restore();
     }
 
-    // Рисуем иконки поверх наших кругов
     drawSvgIcon('lock', startPoint);
     drawSvgIcon('lock_open', endPoint);
   }
