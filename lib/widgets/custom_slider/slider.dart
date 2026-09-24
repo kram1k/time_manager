@@ -1,12 +1,9 @@
-/* !!!! AI SLOP !!!!! */
-
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:time_manager/widgets/custom_slider/paints.dart';
 import 'package:time_manager/widgets/custom_slider/sizes.dart';
 
-// Возможные состояния того, за что мы сейчас тянем
 enum DragMode { none, startEdge, endEdge, body }
 
 class CustomSlider extends StatefulWidget {
@@ -20,14 +17,12 @@ class CustomSlider extends StatefulWidget {
 
 
 class _CustomSliderState extends State<CustomSlider> {
-  // Теперь у дуги меняется и точка старта, и длина
   double _startAngle = -math.pi / 2;
   double _sweepAngle = 3 * math.pi / 4;
 
   DragMode _dragMode = DragMode.none;
   double _lastAngle = 0.0;
 
-  // Функция для нахождения кратчайшего расстояния между двумя углами
   double _angleDelta(double from, double to) {
     double delta = to - from;
     while (delta > math.pi) delta -= 2 * math.pi;
@@ -35,7 +30,6 @@ class _CustomSliderState extends State<CustomSlider> {
     return delta;
   }
 
-  // Проверка: находится ли угол касания внутри тела нашей дуги
   bool _isAngleInArc(double checkAngle, double start, double sweep) {
     double startNorm = start % (2 * math.pi);
     if (startNorm < 0) startNorm += 2 * math.pi;
@@ -52,35 +46,28 @@ class _CustomSliderState extends State<CustomSlider> {
     }
   }
 
-  // Срабатывает в момент ПЕРВОГО касания экрана
   void _onPanDown(DragDownDetails details, Size widgetSize) {
     final center = Offset(widgetSize.width / 2, widgetSize.height / 2);
     final dx = details.localPosition.dx - center.dx;
     final dy = details.localPosition.dy - center.dy;
 
     final touchAngle = math.atan2(dy, dx);
-    // Находим радиус касания, чтобы убедиться, что мы попали именно по кольцу, а не в центр часов
     final touchRadius = math.sqrt(dx * dx + dy * dy);
 
-    // Получаем радиус кольца (предполагаем, что arcRadius - это ширина квадрата, значит настоящий радиус / 2)
     final sizes = Sizes(size: widgetSize);
     final expectedRadius = sizes.arcRadius / 2;
 
-    // Если коснулись слишком далеко от кольца (погрешность 40 пикселей) - игнорируем
     if ((touchRadius - expectedRadius).abs() > 40) {
       _dragMode = DragMode.none;
       return;
     }
 
-    // Вычисляем углы краев
     final startAngleMod = _startAngle % (2 * math.pi);
     final endAngleMod = (_startAngle + _sweepAngle) % (2 * math.pi);
 
-    // Насколько близко палец к краям
     final deltaStart = _angleDelta(startAngleMod, touchAngle).abs();
     final deltaEnd = _angleDelta(endAngleMod, touchAngle).abs();
 
-    // Зона захвата краев в радианах (0.3 радиана ≈ 17 градусов)
     const hitTolerance = 0.3;
 
     if (deltaStart < hitTolerance) {
@@ -96,7 +83,6 @@ class _CustomSliderState extends State<CustomSlider> {
     _lastAngle = touchAngle;
   }
 
-  // Срабатывает при движении пальца
   void _onPanUpdate(DragUpdateDetails details, Size widgetSize) {
     if (_dragMode == DragMode.none) return;
 
@@ -110,23 +96,14 @@ class _CustomSliderState extends State<CustomSlider> {
 
     setState(() {
       if (_dragMode == DragMode.body) {
-        // Двигаем дугу целиком
         _startAngle += delta;
       } else if (_dragMode == DragMode.startEdge) {
-        // Вычисляем новую длину
         double newSweep = _sweepAngle - delta;
-
-        // Ограничиваем длину:
-        // 0.15 - защита от выворачивания наизнанку
-        // math.pi - максимум 12 часов (половина круга)
         double clampedSweep = newSweep.clamp(0.15, math.pi);
-
-        // Смещаем старт только на ту разницу, которую разрешил clamp
         double actualDelta = _sweepAngle - clampedSweep;
         _startAngle += actualDelta;
         _sweepAngle = clampedSweep;
       } else if (_dragMode == DragMode.endEdge) {
-        // Вычисляем новую длину и сразу применяем лимит
         double newSweep = _sweepAngle + delta;
         _sweepAngle = newSweep.clamp(0.15, math.pi);
       }
@@ -135,7 +112,6 @@ class _CustomSliderState extends State<CustomSlider> {
     });
   }
 
-  // Когда отпускаем палец - сбрасываем режим
   void _onPanEnd(DragEndDetails details) {
     _dragMode = DragMode.none;
   }
@@ -159,7 +135,7 @@ class _CustomSliderState extends State<CustomSlider> {
           painter: SliderPainter(
             startAngle: _startAngle,
             sweepAngle: _sweepAngle,
-            mapPicture: widget.preloadedSVGs, // <-- ПЕРЕДАТЬ КАРТИНКИ СЮДА
+            mapPicture: widget.preloadedSVGs,
           ),
         ),
       ),
@@ -183,10 +159,8 @@ class SliderPainter extends CustomPainter {
     Sizes sizes = Sizes(size: size);
     Paints paints = Paints(sizes: sizes);
 
-    // Радиус орбиты = половина ширины arcRadius
     final double radius = sizes.arcRadius / 2;
 
-    // 1. Отрисовка самой дуги слайдера
     canvas.drawArc(
       Rect.fromCenter(
         center: sizes.center,
@@ -199,18 +173,12 @@ class SliderPainter extends CustomPainter {
       paints.sliderArc,
     );
 
-    // --- 2. Отрисовка рисочек ПОВЕРХ дуги слайдера ---
-    // Шаг между рисочками (например, каждые 15 градусов = math.pi / 12)
-    // Если полкруга (math.pi) это 12 часов, то math.pi / 12 = 1 час.
-    final double tickStep = math.pi / 40; 
+    final double tickStep = math.pi / 40;
 
-    // Идем циклом от начала дуги до её конца с заданным шагом.
-    // Начинаем с tickStep, чтобы не рисовать черточку прямо под начальным кружком.
     for (double currentSweep = tickStep; currentSweep < sweepAngle; currentSweep += tickStep) {
       final double angle = startAngle + currentSweep;
-      final double tickLength = 10.0; // Длина рисочки
+      final double tickLength = 10.0;
 
-      // Располагаем черточку поперек дуги (центрируем по радиусу)
       final Offset outerPoint = Offset(
         sizes.center.dx + (radius + tickLength / 2) * math.cos(angle),
         sizes.center.dy + (radius + tickLength / 2) * math.sin(angle),
@@ -223,27 +191,21 @@ class SliderPainter extends CustomPainter {
 
       canvas.drawLine(innerPoint, outerPoint, paints.sliderLine);
     }
-    // ---------------------------------------------------
 
-    // 3. Вычисляем координаты краев дуги
-    // Точка начала (зеленый круг)
     final Offset startPoint = Offset(
       sizes.center.dx + radius * math.cos(startAngle),
       sizes.center.dy + radius * math.sin(startAngle),
     );
 
-    // Точка конца (красный круг)
     final Offset endPoint = Offset(
       sizes.center.dx + radius * math.cos(startAngle + sweepAngle),
       sizes.center.dy + radius * math.sin(startAngle + sweepAngle),
     );
 
-    // 4. Рисуем круги-ручки
-    final double circleRadius = 12; 
+    final double circleRadius = 12;
     canvas.drawCircle(startPoint, circleRadius, paints.offIcon);
     canvas.drawCircle(endPoint, circleRadius, paints.onIcon);
 
-    // 5. Логика отрисовки полупрозрачных SVG
     void drawSvgIcon(String key, Offset position) {
       if (!mapPicture.containsKey(key)) return;
 
