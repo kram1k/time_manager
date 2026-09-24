@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart' as svg;
 import 'package:time_manager/widgets/custom_slider/clock.dart';
-import 'package:time_manager/widgets/custom_slider/slider.dart';
+import 'package:time_manager/widgets/time_range_screen.dart';
 
 final Map<String, ui.Picture> preloadedSVGs = {};
 
@@ -41,8 +41,7 @@ class MainApp extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center, // Центрируем оба слоя
             children: [
-              CustomClock(preloadedSVGs: preloadedSVGs),
-              CustomSlider(preloadedSVGs: preloadedSVGs),
+              TimeRangeScreen(preloadedSVGs: preloadedSVGs),
             ],
           ),
         ),

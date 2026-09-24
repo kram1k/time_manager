@@ -13,13 +13,12 @@ class CustomClock extends StatelessWidget {
   const CustomClock({super.key, required this.preloadedSVGs});
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width / 4,
-      height: MediaQuery.of(context).size.height / 4,
-      child: CustomPaint(painter: ClockPainter(mapPicture: preloadedSVGs)),
-    );
-  }
+Widget build(BuildContext context) {
+  return SizedBox.expand(
+    child: CustomPaint(painter: ClockPainter(mapPicture: preloadedSVGs)),
+  );
+}
+
 }
 
 class ClockPainter extends CustomPainter {

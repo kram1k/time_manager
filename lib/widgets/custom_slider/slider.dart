@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:time_manager/widgets/angle_time.dart';
 import 'package:time_manager/widgets/custom_slider/paints.dart';
 import 'package:time_manager/widgets/custom_slider/sizes.dart';
 
@@ -8,13 +9,13 @@ enum DragMode { none, startEdge, endEdge, body }
 
 class CustomSlider extends StatefulWidget {
   final Map<String, ui.Picture> preloadedSVGs;
+  final void Function(TimeOfDay start, TimeOfDay end)? onChanged;
 
-  const CustomSlider({super.key, required this.preloadedSVGs});
+  const CustomSlider({super.key, required this.preloadedSVGs, this.onChanged});
 
   @override
   State<CustomSlider> createState() => _CustomSliderState();
 }
-
 
 class _CustomSliderState extends State<CustomSlider> {
   double _startAngle = -math.pi / 2;
@@ -23,10 +24,41 @@ class _CustomSliderState extends State<CustomSlider> {
   DragMode _dragMode = DragMode.none;
   double _lastAngle = 0.0;
 
+  int? _lastStartMin;
+  int? _lastEndMin;
+
+  @override
+  void initState() {
+    super.initState();
+    // начальные значения отдаём после первого кадра
+    WidgetsBinding.instance.addPostFrameCallback((_) => _notify());
+  }
+
+  void _notify() {
+    if (widget.onChanged == null) return;
+
+    final startMin = AngleTime.angleToMinutes(_startAngle);
+    final endMin = AngleTime.angleToMinutes(_startAngle + _sweepAngle);
+
+    // не дёргаем колбэк, если минуты не поменялись
+    if (startMin == _lastStartMin && endMin == _lastEndMin) return;
+    _lastStartMin = startMin;
+    _lastEndMin = endMin;
+
+    widget.onChanged!(
+      TimeOfDay(hour: startMin ~/ 60, minute: startMin % 60),
+      TimeOfDay(hour: endMin ~/ 60, minute: endMin % 60),
+    );
+  }
+
   double _angleDelta(double from, double to) {
     double delta = to - from;
-    while (delta > math.pi) delta -= 2 * math.pi;
-    while (delta < -math.pi) delta += 2 * math.pi;
+    while (delta > math.pi) {
+      delta -= 2 * math.pi;
+    }
+    while (delta < -math.pi) {
+      delta += 2 * math.pi;
+    }
     return delta;
   }
 
@@ -47,14 +79,13 @@ class _CustomSliderState extends State<CustomSlider> {
   }
 
   void _onPanDown(DragDownDetails details, Size widgetSize) {
-    final center = Offset(widgetSize.width / 2, widgetSize.height / 2);
+    final sizes = Sizes(size: widgetSize);
+    final center = sizes.center;
     final dx = details.localPosition.dx - center.dx;
     final dy = details.localPosition.dy - center.dy;
 
     final touchAngle = math.atan2(dy, dx);
     final touchRadius = math.sqrt(dx * dx + dy * dy);
-
-    final sizes = Sizes(size: widgetSize);
     final expectedRadius = sizes.arcRadius / 2;
 
     if ((touchRadius - expectedRadius).abs() > 40) {
@@ -86,11 +117,13 @@ class _CustomSliderState extends State<CustomSlider> {
   void _onPanUpdate(DragUpdateDetails details, Size widgetSize) {
     if (_dragMode == DragMode.none) return;
 
-    final center = Offset(widgetSize.width / 2, widgetSize.height / 2);
+    final center = Sizes(size: widgetSize).center; // было: середина виджета
     final touchAngle = math.atan2(
       details.localPosition.dy - center.dy,
       details.localPosition.dx - center.dx,
     );
+
+    // дальше без изменений
 
     double delta = _angleDelta(_lastAngle, touchAngle);
 
@@ -107,9 +140,10 @@ class _CustomSliderState extends State<CustomSlider> {
         double newSweep = _sweepAngle + delta;
         _sweepAngle = newSweep.clamp(0.15, math.pi);
       }
-
       _lastAngle = touchAngle;
     });
+
+    _notify(); // после setState, не внутри
   }
 
   void _onPanEnd(DragEndDetails details) {
@@ -118,27 +152,36 @@ class _CustomSliderState extends State<CustomSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final Size sliderSize = Size(
-      MediaQuery.of(context).size.width,
-      MediaQuery.of(context).size.width,
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final maxW = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : screenWidth;
+        final maxH = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : maxW;
+        final side = math.min(maxW, maxH);
+        final sliderSize = Size(side, side);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onPanDown: (details) => _onPanDown(details, sliderSize),
-      onPanUpdate: (details) => _onPanUpdate(details, sliderSize),
-      onPanEnd: _onPanEnd,
-      child: SizedBox(
-        width: sliderSize.width,
-        height: sliderSize.height,
-        child: CustomPaint(
-          painter: SliderPainter(
-            startAngle: _startAngle,
-            sweepAngle: _sweepAngle,
-            mapPicture: widget.preloadedSVGs,
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onPanDown: (details) => _onPanDown(details, sliderSize),
+          onPanUpdate: (details) => _onPanUpdate(details, sliderSize),
+          onPanEnd: _onPanEnd,
+          child: SizedBox(
+            width: sliderSize.width,
+            height: sliderSize.height,
+            child: CustomPaint(
+              painter: SliderPainter(
+                startAngle: _startAngle,
+                sweepAngle: _sweepAngle,
+                mapPicture: widget.preloadedSVGs,
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -175,7 +218,11 @@ class SliderPainter extends CustomPainter {
 
     final double tickStep = math.pi / 40;
 
-    for (double currentSweep = tickStep; currentSweep < sweepAngle; currentSweep += tickStep) {
+    for (
+      double currentSweep = tickStep;
+      currentSweep < sweepAngle;
+      currentSweep += tickStep
+    ) {
       final double angle = startAngle + currentSweep;
       final double tickLength = 10.0;
 
@@ -183,7 +230,7 @@ class SliderPainter extends CustomPainter {
         sizes.center.dx + (radius + tickLength / 2) * math.cos(angle),
         sizes.center.dy + (radius + tickLength / 2) * math.sin(angle),
       );
-      
+
       final Offset innerPoint = Offset(
         sizes.center.dx + (radius - tickLength / 2) * math.cos(angle),
         sizes.center.dy + (radius - tickLength / 2) * math.sin(angle),
