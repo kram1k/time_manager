@@ -7,13 +7,18 @@ import 'package:time_manager/theme/app_style.dart';
 import 'package:time_manager/widgets/angle_time.dart';
 import 'package:time_manager/widgets/custom_slider/clock.dart';
 import 'package:time_manager/widgets/custom_slider/slider.dart';
-import 'package:time_manager/widgets/time_interval/list.dart';
-import 'package:time_manager/widgets/time_interval/add_button.dart'
-    show AddIntervalButton;
+import 'package:time_manager/widgets/time_interval/add_button.dart';
 
 class TimeRangeScreen extends StatefulWidget {
   final Map<String, ui.Picture> preloadedSVGs;
-  const TimeRangeScreen({super.key, required this.preloadedSVGs});
+
+  final bool Function(TimeInterval interval) onAdd;
+
+  const TimeRangeScreen({
+    super.key,
+    required this.preloadedSVGs,
+    required this.onAdd,
+  });
 
   @override
   State<TimeRangeScreen> createState() => _TimeRangeScreenState();
@@ -22,7 +27,6 @@ class TimeRangeScreen extends StatefulWidget {
 class _TimeRangeScreenState extends State<TimeRangeScreen> {
   final _startCtrl = TextEditingController();
   final _endCtrl = TextEditingController();
-  final _intervals = <TimeInterval>[];
 
   static const _clockMaxSize = 460.0; // максимальный диаметр часов
 
@@ -32,22 +36,7 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
       _startCtrl.text != _endCtrl.text;
 
   void _addInterval() {
-    final interval = TimeInterval(start: _startCtrl.text, end: _endCtrl.text);
-    final exists = _intervals.any(
-      (i) => i.start == interval.start && i.end == interval.end,
-    );
-    if (exists) return;
-
-    setState(() {
-      _intervals.add(interval);
-      _intervals.sort(
-        (a, b) => a.start.compareTo(b.start),
-      ); // "HH:MM" сортируется как строка
-    });
-  }
-
-  void _removeInterval(TimeInterval interval) {
-    setState(() => _intervals.remove(interval));
+    widget.onAdd(TimeInterval(start: _startCtrl.text, end: _endCtrl.text));
   }
 
   Widget _timeBox(TextEditingController controller, Color color) {
@@ -82,60 +71,55 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final side = math.min(
-          _clockMaxSize,
-          math.min(constraints.maxWidth, constraints.maxHeight * 0.5),
-        );
-
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(child: _timeBox(_startCtrl, AppStyle.startColor)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _timeBox(_endCtrl, AppStyle.endColor)),
-                ],
-              ),
-            ),
-            SizedBox(
-              width: side,
-              height: side,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CustomClock(preloadedSVGs: widget.preloadedSVGs),
-                  CustomSlider(
-                    preloadedSVGs: widget.preloadedSVGs,
-                    onChanged: (start, end) {
-                      _startCtrl.text = AngleTime.format(start);
-                      _endCtrl.text = AngleTime.format(end);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              // Перестраивается только кнопка, когда меняется время в полях.
-              child: ListenableBuilder(
-                listenable: Listenable.merge([_startCtrl, _endCtrl]),
-                builder: (context, _) =>
-                    AddIntervalButton(onPressed: _canAdd ? _addInterval : null),
-              ),
-            ),
-            Expanded(
-              child: IntervalList(
-                intervals: _intervals,
-                onDelete: _removeInterval,
-              ),
-            ),
-          ],
-        );
-      },
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(child: _timeBox(_startCtrl, AppStyle.startColor)),
+              const SizedBox(width: 16),
+              Expanded(child: _timeBox(_endCtrl, AppStyle.endColor)),
+            ],
+          ),
+        ),
+        Flexible(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final side = math.min(
+                _clockMaxSize,
+                math.min(constraints.maxWidth, constraints.maxHeight),
+              );
+              return SizedBox(
+                width: side,
+                height: side,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CustomClock(preloadedSVGs: widget.preloadedSVGs),
+                    CustomSlider(
+                      preloadedSVGs: widget.preloadedSVGs,
+                      onChanged: (start, end) {
+                        _startCtrl.text = AngleTime.format(start);
+                        _endCtrl.text = AngleTime.format(end);
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          // Перестраивается только кнопка, когда меняется время в полях.
+          child: ListenableBuilder(
+            listenable: Listenable.merge([_startCtrl, _endCtrl]),
+            builder: (context, _) =>
+                AddIntervalButton(onPressed: _canAdd ? _addInterval : null),
+          ),
+        ),
+      ],
     );
   }
 }
