@@ -29,36 +29,6 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final side = math.min(
-                constraints.maxWidth,
-                constraints.maxHeight,
-              );
-              return Center(
-                child: SizedBox(
-                  width: side,
-                  height: side,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CustomClock(preloadedSVGs: widget.preloadedSVGs),
-                      CustomSlider(
-                        // сверху, чтобы ловить жесты
-                        preloadedSVGs: widget.preloadedSVGs,
-                        onChanged: (start, end) {
-                          _startCtrl.text = AngleTime.format(start);
-                          _endCtrl.text = AngleTime.format(end);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -79,6 +49,35 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final side = math.min(
+                constraints.maxWidth,
+                constraints.maxHeight,
+              );
+              return Center(
+                child: SizedBox(
+                  width: side,
+                  height: side,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CustomClock(preloadedSVGs: widget.preloadedSVGs),
+                      CustomSlider(
+                        preloadedSVGs: widget.preloadedSVGs,
+                        onChanged: (start, end) {
+                          _startCtrl.text = AngleTime.format(start);
+                          _endCtrl.text = AngleTime.format(end);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],
