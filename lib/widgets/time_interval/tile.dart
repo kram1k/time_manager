@@ -31,16 +31,24 @@ class IntervalTile extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Text(
-                    '${interval.start} – ${interval.end}',
-                    style: AppStyle.font,
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '${interval.start} – ${interval.end}',
+                        style: AppStyle.font,
+                        maxLines: 1,
+                      ),
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 12),
                   Text(interval.durationLabel, style: AppStyle.smallFont),
                 ],
               ),
             ),
           ),
+          const SizedBox(width: 8), // отступ перед кнопкой удаления
           IconButton(
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline),
