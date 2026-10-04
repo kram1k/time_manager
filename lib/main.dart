@@ -1,7 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart' as svg;
-import 'package:time_manager/widgets/custom_slider/clock.dart';
 import 'package:time_manager/widgets/time_range_screen.dart';
 
 final Map<String, ui.Picture> preloadedSVGs = {};
@@ -35,7 +34,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(scaffoldBackgroundColor: Colors.grey.shade800),
+      theme: ThemeData(scaffoldBackgroundColor: Colors.grey.shade800, fontFamily: 'Rubik'),
       home: Scaffold(
         body: Center(
           child: Stack(
