@@ -8,7 +8,8 @@ import 'package:time_manager/widgets/angle_time.dart';
 import 'package:time_manager/widgets/custom_slider/clock.dart';
 import 'package:time_manager/widgets/custom_slider/slider.dart';
 import 'package:time_manager/widgets/time_interval/list.dart';
-import 'package:time_manager/widgets/time_interval/add_button.dart' show AddIntervalButton;
+import 'package:time_manager/widgets/time_interval/add_button.dart'
+    show AddIntervalButton;
 
 class TimeRangeScreen extends StatefulWidget {
   final Map<String, ui.Picture> preloadedSVGs;
@@ -39,7 +40,9 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
 
     setState(() {
       _intervals.add(interval);
-      _intervals.sort((a, b) => a.start.compareTo(b.start)); // "HH:MM" сортируется как строка
+      _intervals.sort(
+        (a, b) => a.start.compareTo(b.start),
+      ); // "HH:MM" сортируется как строка
     });
   }
 
@@ -47,35 +50,25 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
     setState(() => _intervals.remove(interval));
   }
 
-  Widget _timeBox(TextEditingController controller, String label) {
+  Widget _timeBox(TextEditingController controller, Color color) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: AppStyle.boxColor,
+        color: color,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 6),
-            child: Text(label, style: AppStyle.font),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppStyle.innerBoxColor,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: TextField(
-              controller: controller,
-              readOnly: true,
-              style: AppStyle.font,
-              decoration: const InputDecoration.collapsed(hintText: null),
-            ),
-          ),
-        ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppStyle.innerBoxColor,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: TextField(
+          controller: controller,
+          readOnly: true,
+          style: AppStyle.font,
+          decoration: const InputDecoration.collapsed(hintText: null),
+        ),
       ),
     );
   }
@@ -102,9 +95,9 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Expanded(child: _timeBox(_startCtrl, 'Start')),
+                  Expanded(child: _timeBox(_startCtrl, AppStyle.startColor)),
                   const SizedBox(width: 16),
-                  Expanded(child: _timeBox(_endCtrl, 'End')),
+                  Expanded(child: _timeBox(_endCtrl, AppStyle.endColor)),
                 ],
               ),
             ),
@@ -130,9 +123,8 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
               // Перестраивается только кнопка, когда меняется время в полях.
               child: ListenableBuilder(
                 listenable: Listenable.merge([_startCtrl, _endCtrl]),
-                builder: (context, _) => AddIntervalButton(
-                  onPressed: _canAdd ? _addInterval : null,
-                ),
+                builder: (context, _) =>
+                    AddIntervalButton(onPressed: _canAdd ? _addInterval : null),
               ),
             ),
             Expanded(
