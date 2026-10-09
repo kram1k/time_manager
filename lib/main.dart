@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart' as svg;
+import 'package:time_manager/theme/app_style.dart';
 import 'package:time_manager/widgets/home_shell.dart';
 
 final Map<String, ui.Picture> preloadedSVGs = {};
@@ -34,7 +35,16 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(scaffoldBackgroundColor: Colors.grey.shade800, fontFamily: 'Rubik'),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Colors.grey.shade800,
+        fontFamily: 'Rubik',
+        snackBarTheme: const SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppStyle.boxColor,
+          contentTextStyle: AppStyle.smallFont,
+        ),
+      ),
       home: HomeShell(preloadedSVGs: preloadedSVGs),
       debugShowCheckedModeBanner: false,
     );

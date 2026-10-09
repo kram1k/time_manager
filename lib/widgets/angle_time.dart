@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 class AngleTime {
   static const int minutesInCircle = 24 * 60; // 720 для 12-часового циферблата
   static const double zeroAngle = -math.pi / 2; // 00:00 наверху
+  static const double minuteAngle = 2 * math.pi / minutesInCircle;
+
+  static double minutesToAngle(int minutes) => zeroAngle + minutes * minuteAngle;
 
   static int angleToMinutes(double angle, {int snap = 1}) {
     const twoPi = 2 * math.pi;

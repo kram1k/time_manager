@@ -12,7 +12,7 @@ class Paints {
     ..style = PaintingStyle.fill
     ..color = Colors.grey.shade900;
   Paint clockLine = Paint()
-    ..color = Colors.black
+    ..color = Colors.grey
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..strokeWidth = 1.5;
@@ -26,7 +26,7 @@ class Paints {
   Paint lockIcon = Paint()..color = Colors.black;
 
   Paint get clockArc => Paint()
-    ..color = Colors.grey.shade900
+    ..color = Colors.grey.shade700
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..strokeWidth = sizes.arcStrokeWidth;

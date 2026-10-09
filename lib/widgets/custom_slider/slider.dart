@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:time_manager/widgets/angle_time.dart';
 import 'package:time_manager/widgets/custom_slider/paints.dart';
 import 'package:time_manager/widgets/custom_slider/sizes.dart';
@@ -14,15 +15,26 @@ class CustomSlider extends StatefulWidget {
   const CustomSlider({super.key, required this.preloadedSVGs, this.onChanged});
 
   @override
-  State<CustomSlider> createState() => _CustomSliderState();
+  State<CustomSlider> createState() => CustomSliderState();
 }
 
-class _CustomSliderState extends State<CustomSlider> {
+class CustomSliderState extends State<CustomSlider> {
+  static const _snapMinutes = 5; // шаг при перетаскивании
+  static const _minSweepMinutes = 30;
+  static const _maxSweepMinutes = 12 * 60;
+  static const _minSweep = _minSweepMinutes * AngleTime.minuteAngle;
+  static const _maxSweep = _maxSweepMinutes * AngleTime.minuteAngle;
+
   double _startAngle = -math.pi / 2;
   double _sweepAngle = 3 * math.pi / 4;
 
   DragMode _dragMode = DragMode.none;
   double _lastAngle = 0.0;
+
+  // Положение пальца без привязки к шагу: копим его отдельно,
+  // иначе мелкие сдвиги терялись бы при округлении.
+  double _rawStart = 0.0;
+  double _rawSweep = 0.0;
 
   int? _lastStartMin;
   int? _lastEndMin;
@@ -34,11 +46,57 @@ class _CustomSliderState extends State<CustomSlider> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _notify());
   }
 
+  int get _startMinutes => AngleTime.angleToMinutes(_startAngle);
+  int get _endMinutes => AngleTime.angleToMinutes(_startAngle + _sweepAngle);
+
+  /// Ставит начало на [time]. Конец остаётся на месте, а если длительность
+  /// выходит за пределы — весь интервал сдвигается.
+  void setStart(TimeOfDay time) {
+    final startMin = time.hour * 60 + time.minute;
+    final sweepMin = (_endMinutes - startMin) % AngleTime.minutesInCircle;
+
+    setState(() {
+      _startAngle = AngleTime.minutesToAngle(startMin);
+      if (_isSweepAllowed(sweepMin)) {
+        _sweepAngle = sweepMin * AngleTime.minuteAngle;
+      }
+    });
+    _notify();
+  }
+
+  /// Ставит конец на [time]. Начало остаётся на месте, а если длительность
+  /// выходит за пределы — весь интервал сдвигается.
+  void setEnd(TimeOfDay time) {
+    final endMin = time.hour * 60 + time.minute;
+    final startMin = _startMinutes;
+    final currentSweepMin =
+        (_endMinutes - startMin) % AngleTime.minutesInCircle;
+    final sweepMin = (endMin - startMin) % AngleTime.minutesInCircle;
+
+    setState(() {
+      if (_isSweepAllowed(sweepMin)) {
+        _sweepAngle = sweepMin * AngleTime.minuteAngle;
+      } else {
+        _startAngle = AngleTime.minutesToAngle(
+          (endMin - currentSweepMin) % AngleTime.minutesInCircle,
+        );
+      }
+    });
+    _notify();
+  }
+
+  bool _isSweepAllowed(int minutes) =>
+      minutes >= _minSweepMinutes && minutes <= _maxSweepMinutes;
+
+  double _snap(double angle) => AngleTime.minutesToAngle(
+    AngleTime.angleToMinutes(angle, snap: _snapMinutes),
+  );
+
   void _notify() {
     if (widget.onChanged == null) return;
 
-    final startMin = AngleTime.angleToMinutes(_startAngle);
-    final endMin = AngleTime.angleToMinutes(_startAngle + _sweepAngle);
+    final startMin = _startMinutes;
+    final endMin = _endMinutes;
 
     // не дёргаем колбэк, если минуты не поменялись
     if (startMin == _lastStartMin && endMin == _lastEndMin) return;
@@ -101,7 +159,8 @@ class _CustomSliderState extends State<CustomSlider> {
 
     const hitTolerance = 0.3;
 
-    if (deltaStart < hitTolerance) {
+    // если ручки рядом, берём ближайшую к пальцу
+    if (deltaStart < hitTolerance && deltaStart <= deltaEnd) {
       _dragMode = DragMode.startEdge;
     } else if (deltaEnd < hitTolerance) {
       _dragMode = DragMode.endEdge;
@@ -112,6 +171,8 @@ class _CustomSliderState extends State<CustomSlider> {
     }
 
     _lastAngle = touchAngle;
+    _rawStart = _startAngle;
+    _rawSweep = _sweepAngle;
   }
 
   void _onPanUpdate(DragUpdateDetails details, Size widgetSize) {
@@ -123,26 +184,37 @@ class _CustomSliderState extends State<CustomSlider> {
       details.localPosition.dx - center.dx,
     );
 
-    // дальше без изменений
+    final delta = _angleDelta(_lastAngle, touchAngle);
+    _lastAngle = touchAngle;
 
-    double delta = _angleDelta(_lastAngle, touchAngle);
+    final endAngle = _startAngle + _sweepAngle;
+    double newStart = _startAngle;
+    double newSweep = _sweepAngle;
+
+    if (_dragMode == DragMode.body) {
+      _rawStart += delta;
+      newStart = _snap(_rawStart);
+    } else if (_dragMode == DragMode.startEdge) {
+      _rawSweep = (_rawSweep - delta).clamp(_minSweep, _maxSweep);
+      newStart = _snap(endAngle - _rawSweep);
+      newSweep = (endAngle - newStart) % (2 * math.pi);
+    } else if (_dragMode == DragMode.endEdge) {
+      _rawSweep = (_rawSweep + delta).clamp(_minSweep, _maxSweep);
+      newSweep = (_snap(_startAngle + _rawSweep) - _startAngle) % (2 * math.pi);
+    }
+
+    // пока палец не дошёл до следующего шага, перерисовывать нечего
+    final changed =
+        AngleTime.angleToMinutes(newStart) != _startMinutes ||
+        AngleTime.angleToMinutes(newStart + newSweep) != _endMinutes;
+    if (!changed) return;
 
     setState(() {
-      if (_dragMode == DragMode.body) {
-        _startAngle += delta;
-      } else if (_dragMode == DragMode.startEdge) {
-        double newSweep = _sweepAngle - delta;
-        double clampedSweep = newSweep.clamp(0.15, math.pi);
-        double actualDelta = _sweepAngle - clampedSweep;
-        _startAngle += actualDelta;
-        _sweepAngle = clampedSweep;
-      } else if (_dragMode == DragMode.endEdge) {
-        double newSweep = _sweepAngle + delta;
-        _sweepAngle = newSweep.clamp(0.15, math.pi);
-      }
-      _lastAngle = touchAngle;
+      _startAngle = newStart;
+      _sweepAngle = newSweep;
     });
 
+    HapticFeedback.selectionClick();
     _notify(); // после setState, не внутри
   }
 
@@ -152,6 +224,11 @@ class _CustomSliderState extends State<CustomSlider> {
 
   @override
   Widget build(BuildContext context) {
+    final startLabel = AngleTime.format(AngleTime.angleToTime(_startAngle));
+    final endLabel = AngleTime.format(
+      AngleTime.angleToTime(_startAngle + _sweepAngle),
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = MediaQuery.of(context).size.width;
@@ -169,14 +246,18 @@ class _CustomSliderState extends State<CustomSlider> {
           onPanDown: (details) => _onPanDown(details, sliderSize),
           onPanUpdate: (details) => _onPanUpdate(details, sliderSize),
           onPanEnd: _onPanEnd,
-          child: SizedBox(
-            width: sliderSize.width,
-            height: sliderSize.height,
-            child: CustomPaint(
-              painter: SliderPainter(
-                startAngle: _startAngle,
-                sweepAngle: _sweepAngle,
-                mapPicture: widget.preloadedSVGs,
+          child: Semantics(
+            label: 'Time range',
+            value: '$startLabel – $endLabel',
+            child: SizedBox(
+              width: sliderSize.width,
+              height: sliderSize.height,
+              child: CustomPaint(
+                painter: SliderPainter(
+                  startAngle: _startAngle,
+                  sweepAngle: _sweepAngle,
+                  mapPicture: widget.preloadedSVGs,
+                ),
               ),
             ),
           ),
@@ -252,6 +333,9 @@ class SliderPainter extends CustomPainter {
     final double circleRadius = 12;
     canvas.drawCircle(startPoint, circleRadius, paints.offIcon);
     canvas.drawCircle(endPoint, circleRadius, paints.onIcon);
+    // обводка отделяет ручки от дуги
+    canvas.drawCircle(startPoint, circleRadius, paints.sliderLine);
+    canvas.drawCircle(endPoint, circleRadius, paints.sliderLine);
 
     void drawSvgIcon(String key, Offset position) {
       if (!mapPicture.containsKey(key)) return;

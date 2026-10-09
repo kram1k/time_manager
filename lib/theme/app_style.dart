@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 abstract final class AppStyle {
   static const boxColor = Colors.black;
   static const innerBoxColor = Color(0xFF212121);
+  static const accentBoxColor = Color(0xFF616161); // 3:1+ на boxColor
   static const textColor = Color(0xFFADADAD);
+  static const selectedColor = Colors.white;
   static const startColor = Color(
     0xFFEF5350,
   );

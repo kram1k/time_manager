@@ -37,6 +37,17 @@ class _HomeShellState extends State<HomeShell> {
     setState(() => _intervals.remove(interval));
   }
 
+  // Счётчик на вкладке показывает, куда попал добавленный интервал.
+  Widget _intervalsIcon(IconData icon) {
+    return Badge.count(
+      count: _intervals.length,
+      isLabelVisible: _intervals.isNotEmpty,
+      backgroundColor: AppStyle.textColor,
+      textColor: AppStyle.boxColor,
+      child: Icon(icon),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,27 +74,38 @@ class _HomeShellState extends State<HomeShell> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: NavigationBarTheme(
-                  data: const NavigationBarThemeData(
+                  data: NavigationBarThemeData(
                     backgroundColor: AppStyle.boxColor,
-                    indicatorColor: AppStyle.innerBoxColor,
-                    labelTextStyle: WidgetStatePropertyAll(AppStyle.smallFont),
-                    iconTheme: WidgetStatePropertyAll(
-                      IconThemeData(color: AppStyle.textColor),
+                    indicatorColor: AppStyle.accentBoxColor,
+                    labelTextStyle: WidgetStateProperty.resolveWith(
+                      (states) => states.contains(WidgetState.selected)
+                          ? AppStyle.smallFont.copyWith(
+                              color: AppStyle.selectedColor,
+                              fontWeight: FontWeight.w500,
+                            )
+                          : AppStyle.smallFont,
+                    ),
+                    iconTheme: WidgetStateProperty.resolveWith(
+                      (states) => IconThemeData(
+                        color: states.contains(WidgetState.selected)
+                            ? AppStyle.selectedColor
+                            : AppStyle.textColor,
+                      ),
                     ),
                   ),
                   child: NavigationBar(
                     height: 64,
                     selectedIndex: _index,
                     onDestinationSelected: (i) => setState(() => _index = i),
-                    destinations: const [
-                      NavigationDestination(
+                    destinations: [
+                      const NavigationDestination(
                         icon: Icon(Icons.schedule_outlined),
                         selectedIcon: Icon(Icons.schedule),
                         label: 'Clock',
                       ),
                       NavigationDestination(
-                        icon: Icon(Icons.list_alt_outlined),
-                        selectedIcon: Icon(Icons.list_alt),
+                        icon: _intervalsIcon(Icons.list_alt_outlined),
+                        selectedIcon: _intervalsIcon(Icons.list_alt),
                         label: 'Intervals',
                       ),
                     ],
