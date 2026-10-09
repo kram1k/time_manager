@@ -39,12 +39,12 @@ class ClockPainter extends CustomPainter {
       paints.smallCircle,
     );
     // Text
-    _smallCircleTextCreater(canvas: canvas, sizes: sizes, paints: paints);
+    _smallCircleTextCreator(canvas: canvas, sizes: sizes, paints: paints);
     // SVG
     for (final entry in mapPicture.entries) {
       if (entry.key == 'moon' || entry.key == 'sun') {
         canvas.save();
-        double angle = 0.0;
+        double angle = 0;
         if (entry.key == 'moon') {
           angle = -math.pi / 2;
         } else if (entry.key == 'sun') {
@@ -62,7 +62,7 @@ class ClockPainter extends CustomPainter {
         canvas.translate(-svgWidth / 2, -svgHeight / 2);
         canvas.drawPicture(entry.value);
         canvas.restore();
-      };
+      }
     }
   }
 
@@ -71,7 +71,7 @@ class ClockPainter extends CustomPainter {
     return oldDelegate.mapPicture.length != mapPicture.length;
   }
 
-  void _smallCircleTextCreater({
+  void _smallCircleTextCreator({
     required Canvas canvas,
     required Sizes sizes,
     required Paints paints,

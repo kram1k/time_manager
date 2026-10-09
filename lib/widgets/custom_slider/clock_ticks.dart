@@ -14,7 +14,9 @@ class ClockTicks {
       double curr = sorted[i], next = sorted[(i+1)%sorted.length];
       double diff = next - curr; if(diff <= 0) diff += 2*math.pi;
       double step = diff / (ticksBetweenHours + 1);
-      for(int k=1; k<=ticksBetweenHours; k++) result.add(curr + step * k);
+      for(int k=1; k<=ticksBetweenHours; k++) {
+        result.add(curr + step * k);
+      }
     }
     return result;
   }

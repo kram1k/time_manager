@@ -2,7 +2,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart' as svg;
 import 'package:time_manager/widgets/home_shell.dart';
-import 'package:time_manager/widgets/time_range_screen.dart';
 
 final Map<String, ui.Picture> preloadedSVGs = {};
 
