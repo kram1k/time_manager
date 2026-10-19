@@ -1,6 +1,8 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart' as svg;
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:time_manager/data/interval_repository.dart';
 import 'package:time_manager/theme/app_style.dart';
 import 'package:time_manager/widgets/home_shell.dart';
 
@@ -26,11 +28,16 @@ void main() async {
 
   await preloadAssets();
 
-  runApp(const MainApp());
+  await Hive.initFlutter();
+  final repository = await IntervalRepository.open();
+
+  runApp(MainApp(repository: repository));
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  final IntervalRepository repository;
+
+  const MainApp({super.key, required this.repository});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +52,7 @@ class MainApp extends StatelessWidget {
           contentTextStyle: AppStyle.smallFont,
         ),
       ),
-      home: HomeShell(preloadedSVGs: preloadedSVGs),
+      home: HomeShell(preloadedSVGs: preloadedSVGs, repository: repository),
       debugShowCheckedModeBanner: false,
     );
   }

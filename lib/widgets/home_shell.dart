@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:time_manager/data/interval_repository.dart';
 import 'package:time_manager/models/time_interval.dart';
 import 'package:time_manager/theme/app_style.dart';
 import 'package:time_manager/widgets/time_interval/screen.dart';
@@ -8,8 +9,13 @@ import 'package:time_manager/widgets/time_range_screen.dart';
 
 class HomeShell extends StatefulWidget {
   final Map<String, ui.Picture> preloadedSVGs;
+  final IntervalRepository repository;
 
-  const HomeShell({super.key, required this.preloadedSVGs});
+  const HomeShell({
+    super.key,
+    required this.preloadedSVGs,
+    required this.repository,
+  });
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -17,24 +23,21 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
-  final _intervals = <TimeInterval>[];
+  late List<TimeInterval> _intervals = widget.repository.getAll();
   static const _navMaxWidth = 460.0; // как _clockMaxSize на экране часов
 
+  // Список обновляется сразу, запись в Hive идёт в фоне.
   bool _addInterval(TimeInterval interval) {
-    final exists = _intervals.any(
-      (i) => i.start == interval.start && i.end == interval.end,
-    );
-    if (exists) return false;
+    if (widget.repository.contains(interval.start, interval.end)) return false;
 
-    setState(() {
-      _intervals.add(interval);
-      _intervals.sort((a, b) => a.start.compareTo(b.start));
-    });
+    widget.repository.add(interval);
+    setState(() => _intervals = widget.repository.getAll());
     return true;
   }
 
   void _removeInterval(TimeInterval interval) {
-    setState(() => _intervals.remove(interval));
+    widget.repository.remove(interval);
+    setState(() => _intervals = widget.repository.getAll());
   }
 
   // Счётчик на вкладке показывает, куда попал добавленный интервал.

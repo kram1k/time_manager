@@ -3,8 +3,9 @@ class TimeInterval {
   final String start;
   final String end;
 
-  TimeInterval({required this.start, required this.end})
-    : id = DateTime.now().microsecondsSinceEpoch;
+  // id передаётся при чтении из хранилища, для нового интервала генерируется.
+  TimeInterval({int? id, required this.start, required this.end})
+    : id = id ?? DateTime.now().microsecondsSinceEpoch;
 
   int get durationMinutes {
     final diff = _toMinutes(end) - _toMinutes(start);
