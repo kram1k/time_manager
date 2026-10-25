@@ -26,7 +26,8 @@ class IntervalRepository {
   }
 
   // Ключ строковый: id в микросекундах не влезает в целочисленный ключ Hive (до 2^32).
-  Future<void> add(TimeInterval interval) => _box.put('${interval.id}', interval);
+  Future<void> add(TimeInterval interval) =>
+      _box.put('${interval.id}', interval);
 
   Future<void> remove(TimeInterval interval) => _box.delete('${interval.id}');
 }

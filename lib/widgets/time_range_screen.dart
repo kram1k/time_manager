@@ -8,6 +8,7 @@ import 'package:time_manager/theme/app_style.dart';
 import 'package:time_manager/widgets/angle_time.dart';
 import 'package:time_manager/widgets/custom_slider/clock.dart';
 import 'package:time_manager/widgets/custom_slider/slider.dart';
+import 'package:time_manager/widgets/sync/sync_button.dart';
 import 'package:time_manager/widgets/time_interval/add_button.dart';
 
 class TimeRangeScreen extends StatefulWidget {
@@ -15,10 +16,14 @@ class TimeRangeScreen extends StatefulWidget {
 
   final bool Function(TimeInterval interval) onAdd;
 
+  // Нужны только кнопке синхронизации.
+  final List<TimeInterval> intervals;
+
   const TimeRangeScreen({
     super.key,
     required this.preloadedSVGs,
     required this.onAdd,
+    required this.intervals,
   });
 
   @override
@@ -139,11 +144,8 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
       borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => _pickTime(
-          time: time,
-          title: '$label time',
-          onPicked: onPicked,
-        ),
+        onTap: () =>
+            _pickTime(time: time, title: '$label time', onPicked: onPicked),
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Ink(
@@ -240,10 +242,19 @@ class _TimeRangeScreenState extends State<TimeRangeScreen> {
         Padding(
           padding: const EdgeInsets.all(16),
           // Перестраивается только кнопка, когда меняется время в полях.
-          child: ListenableBuilder(
-            listenable: Listenable.merge([_start, _end]),
-            builder: (context, _) =>
-                AddIntervalButton(onPressed: _canAdd ? _addInterval : null),
+          child: Row(
+            children: [
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([_start, _end]),
+                  builder: (context, _) => AddIntervalButton(
+                    onPressed: _canAdd ? _addInterval : null,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              SyncButton(intervals: widget.intervals, filled: true),
+            ],
           ),
         ),
       ],

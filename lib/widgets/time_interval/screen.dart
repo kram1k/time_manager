@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:time_manager/models/time_interval.dart';
 import 'package:time_manager/theme/app_style.dart';
+import 'package:time_manager/widgets/sync/sync_button.dart';
 import 'package:time_manager/widgets/time_interval/list.dart';
 
 class IntervalsScreen extends StatelessWidget {
@@ -18,9 +19,14 @@ class IntervalsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text('Intervals', style: AppStyle.font),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 4, 0),
+          child: Row(
+            children: [
+              const Expanded(child: Text('Intervals', style: AppStyle.font)),
+              SyncButton(intervals: intervals),
+            ],
+          ),
         ),
         Expanded(
           child: IntervalList(intervals: intervals, onDelete: onDelete),

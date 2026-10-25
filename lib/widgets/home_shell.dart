@@ -61,6 +61,7 @@ class _HomeShellState extends State<HomeShell> {
             TimeRangeScreen(
               preloadedSVGs: widget.preloadedSVGs,
               onAdd: _addInterval,
+              intervals: _intervals,
             ),
             IntervalsScreen(intervals: _intervals, onDelete: _removeInterval),
           ],

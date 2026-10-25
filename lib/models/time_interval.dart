@@ -7,6 +7,8 @@ class TimeInterval {
   TimeInterval({int? id, required this.start, required this.end})
     : id = id ?? DateTime.now().microsecondsSinceEpoch;
 
+  Map<String, String> toJson() => {'start': start, 'end': end};
+
   int get durationMinutes {
     final diff = _toMinutes(end) - _toMinutes(start);
     return diff >= 0 ? diff : diff + 24 * 60;
